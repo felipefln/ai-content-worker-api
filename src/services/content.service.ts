@@ -1,4 +1,6 @@
 import type { z } from 'zod';
+import { ContentNotCancelableError } from '../errors/content-not-cancelable-error';
+import { ContentNotFoundError } from '../errors/content-not-found-error';
 import { InsufficientCreditsError } from '../errors/insufficient-credits-error';
 import { UserNotFoundError } from '../errors/user-not-found-error';
 import { prisma } from '../lib/prisma';
@@ -44,5 +46,31 @@ export const contentService = {
       contentId: content.id,
       status: content.status,
     };
+  },
+
+  async getById(contentId: string) {
+    const content = await contentRepository.findById(contentId);
+
+    if (!content) {
+      throw new ContentNotFoundError(contentId);
+    }
+
+    return content;
+  },
+
+  async cancel(contentId: string) {
+    const canceled = await contentRepository.cancelIfCancelable(contentId);
+
+    if (!canceled) {
+      const content = await contentRepository.findById(contentId);
+
+      if (!content) {
+        throw new ContentNotFoundError(contentId);
+      }
+
+      throw new ContentNotCancelableError(contentId, content.status);
+    }
+
+    return canceled;
   },
 };
