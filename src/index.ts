@@ -1,7 +1,9 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import sensible from '@fastify/sensible';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { env } from './config/env';
 import { registerErrorHandler } from './http/plugins/error-handler';
+import { contentRoutes } from './http/routes/content.routes';
 import { healthRoutes } from './http/routes/health';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -9,9 +11,13 @@ export async function buildApp(): Promise<FastifyInstance> {
     logger: true,
   });
 
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+
   await app.register(sensible);
   registerErrorHandler(app);
   await app.register(healthRoutes);
+  await app.register(contentRoutes);
 
   return app;
 }
