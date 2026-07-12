@@ -19,3 +19,20 @@ export const generateContentResponseSchema = z.object({
   contentId: z.uuid(),
   status: contentStatusSchema,
 });
+
+export const contentParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export type ContentParams = z.infer<typeof contentParamsSchema>;
+
+export const contentResponseSchema = z.object({
+  id: z.uuid(),
+  userId: z.uuid(),
+  topic: z.string(),
+  status: contentStatusSchema,
+  resultUrl: z.string().nullable(),
+  errorMessage: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
