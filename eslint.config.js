@@ -5,7 +5,7 @@ const globals = require('globals');
 
 module.exports = tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'generated/**'],
+    ignores: ['dist/**', 'node_modules/**', 'src/generated/**'],
   },
   js.configs.recommended,
   {
@@ -14,11 +14,13 @@ module.exports = tseslint.config(
     },
   },
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'prisma/**/*.ts', '*.config.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        projectService: {
+          allowDefaultProject: ['*.config.ts', 'prisma/seed.ts'],
+        },
         tsconfigRootDir: __dirname,
       },
     },
