@@ -1,6 +1,12 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import sensible from '@fastify/sensible';
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
 import { env } from './config/env';
 import { registerErrorHandler } from './http/plugins/error-handler';
 import { contentRoutes } from './http/routes/content.routes';
@@ -15,6 +21,23 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.setSerializerCompiler(serializerCompiler);
 
   await app.register(sensible);
+
+  await app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: 'AI Content Generator API',
+        description:
+          'API para geração assíncrona de conteúdo com IA, controle de créditos e fila de processamento.',
+        version: '1.0.0',
+      },
+    },
+    transform: jsonSchemaTransform,
+  });
+
+  await app.register(fastifySwaggerUi, {
+    routePrefix: '/docs',
+  });
+
   registerErrorHandler(app);
   await app.register(healthRoutes);
   await app.register(contentRoutes);
