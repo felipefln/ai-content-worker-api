@@ -8,6 +8,14 @@ export interface ContentJobData {
   topic: string;
 }
 
+export const CONTENT_JOB_OPTIONS = {
+  attempts: 3,
+  backoff: {
+    type: 'exponential',
+    delay: 1000,
+  },
+} as const;
+
 export const contentQueue = new Queue<ContentJobData>(CONTENT_QUEUE_NAME, {
   connection: redisConnection,
 });

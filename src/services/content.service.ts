@@ -4,7 +4,7 @@ import { ContentNotFoundError } from '../errors/content-not-found-error';
 import { InsufficientCreditsError } from '../errors/insufficient-credits-error';
 import { UserNotFoundError } from '../errors/user-not-found-error';
 import { prisma } from '../lib/prisma';
-import { contentQueue } from '../queue/content-queue';
+import { CONTENT_JOB_OPTIONS, contentQueue } from '../queue/content-queue';
 import { contentRepository } from '../repositories/content.repository';
 import { userRepository } from '../repositories/user.repository';
 import type { contentStatusSchema } from '../schemas/content.schema';
@@ -37,10 +37,17 @@ export const contentService = {
       return contentRepository.create({ userId: input.userId, topic: input.topic }, tx);
     });
 
-    await contentQueue.add('generate', {
-      contentId: content.id,
-      topic: content.topic,
-    });
+    await contentQueue.add(
+      'generate',
+      {
+        contentId: content.id,
+        topic: content.topic,
+      },
+      {
+        jobId: content.id,
+        ...CONTENT_JOB_OPTIONS,
+      },
+    );
 
     return {
       contentId: content.id,
@@ -72,5 +79,25 @@ export const contentService = {
     }
 
     return canceled;
+  },
+
+  async startProcessing(contentId: string) {
+    return contentRepository.startProcessingIfNotCanceled(contentId);
+  },
+
+  async completeGeneration(contentId: string, resultUrl: string) {
+    return contentRepository.completeIfProcessing(contentId, resultUrl);
+  },
+
+  async markAsFailed(contentId: string, errorMessage: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      const failed = await contentRepository.failIfProcessing(contentId, errorMessage, tx);
+
+      if (!failed) {
+        return;
+      }
+
+      await userRepository.incrementCredit(failed.userId, tx);
+    });
   },
 };
