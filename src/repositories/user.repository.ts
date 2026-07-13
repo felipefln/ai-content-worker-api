@@ -16,4 +16,11 @@ export const userRepository = {
 
     return result.count > 0;
   },
+
+  async incrementCredit(id: string, db: Db = prisma) {
+    return db.user.update({
+      where: { id },
+      data: { credits: { increment: 1 } },
+    });
+  },
 };

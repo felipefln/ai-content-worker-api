@@ -31,4 +31,49 @@ export const contentRepository = {
       throw error;
     }
   },
+
+  async startProcessingIfNotCanceled(id: string, db: Db = prisma) {
+    try {
+      return await db.content.update({
+        where: { id, status: { in: ['PENDING', 'PROCESSING'] } },
+        data: { status: 'PROCESSING' },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return null;
+      }
+
+      throw error;
+    }
+  },
+
+  async completeIfProcessing(id: string, resultUrl: string, db: Db = prisma) {
+    try {
+      return await db.content.update({
+        where: { id, status: 'PROCESSING' },
+        data: { status: 'COMPLETED', resultUrl },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return null;
+      }
+
+      throw error;
+    }
+  },
+
+  async failIfProcessing(id: string, errorMessage: string, db: Db = prisma) {
+    try {
+      return await db.content.update({
+        where: { id, status: 'PROCESSING' },
+        data: { status: 'FAILED', errorMessage },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return null;
+      }
+
+      throw error;
+    }
+  },
 };
