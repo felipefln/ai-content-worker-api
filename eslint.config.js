@@ -33,5 +33,11 @@ module.exports = tseslint.config(
       '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
     },
   },
+  {
+    files: ['**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
   eslintConfigPrettier,
 );
